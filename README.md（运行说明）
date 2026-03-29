@@ -1,0 +1,18 @@
+# 人脸识别系统 - 课程作业03
+基于 face_recognition + Streamlit 实现的人脸识别Web应用
+
+## 运行方法
+1. 安装依赖
+pip install -r requirements.txt
+
+2. 启动系统
+streamlit run src/app.py
+
+3. 打开浏览器访问
+http://localhost:8501
+
+## 功能
+- 上传图片检测人脸
+- 人脸框选可视化
+- 128维特征编码
+- 支持多人脸识别
