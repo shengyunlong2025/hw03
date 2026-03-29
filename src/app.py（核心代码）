@@ -1,0 +1,70 @@
+import streamlit as st
+import face_recognition
+import cv2
+import numpy as np
+from PIL import Image, ImageDraw
+
+# 页面配置
+st.set_page_config(page_title="人脸识别系统", page_icon="👤", layout="wide")
+st.title("👤 基于 face_recognition 的人脸识别系统")
+st.caption("《人工智能通识》课程作业03")
+
+# 已知人脸库（可自行添加）
+known_face_encodings = []
+known_face_names = []
+
+# 上传图片
+uploaded_file = st.file_uploader("上传图片", type=["jpg", "jpeg", "png"])
+use_sample = st.checkbox("使用示例图片")
+
+# 图片处理函数
+def process_image(image):
+    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    face_locations = face_recognition.face_locations(rgb_image)
+    face_encodings = face_recognition.face_encodings(rgb_image, face_locations)
+    
+    pil_image = Image.fromarray(rgb_image)
+    draw = ImageDraw.Draw(pil_image)
+
+    for (top, right, bottom, left), encoding in zip(face_locations, face_encodings):
+        matches = face_recognition.compare_faces(known_face_encodings, encoding)
+        name = "未知"
+        if len(known_face_encodings) > 0:
+            distances = face_recognition.face_distance(known_face_encodings, encoding)
+            best_idx = np.argmin(distances)
+            if matches[best_idx]:
+                name = known_face_names[best_idx]
+
+        draw.rectangle([(left, top), (right, bottom)], outline=(0, 255, 0), width=2)
+        draw.text((left + 6, bottom - 15), name, fill=(255, 255, 255))
+
+    return np.array(pil_image), len(face_locations)
+
+# 主逻辑
+if uploaded_file is not None:
+    img = Image.open(uploaded_file)
+    img_array = np.array(img)
+    result_img, count = process_image(img_array)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("原图")
+        st.image(img_array, use_column_width=True)
+    with col2:
+        st.subheader(f"检测结果 | 人脸数：{count}")
+        st.image(result_img, use_column_width=True)
+
+elif use_sample:
+    sample_img = face_recognition.load_image_file("https://raw.githubusercontent.com/ageitgey/face_recognition/master/examples/two_people.jpg")
+    res_img, cnt = process_image(sample_img)
+    st.subheader(f"示例检测 | 人脸数：{cnt}")
+    st.image(res_img, use_column_width=True)
+
+else:
+    st.info("请上传图片或勾选使用示例图片")
+
+st.markdown("---")
+st.markdown("### 功能")
+st.markdown("- 人脸检测")
+st.markdown("- 128维特征编码")
+st.markdown("- 人脸框选与识别展示")
